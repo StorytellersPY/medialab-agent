@@ -216,14 +216,20 @@ app.post("/api/search", async (req, res) => {
     const data = await callAnthropic(
       {
         model: MODEL,
-        max_tokens: 2048,
+        max_tokens: 4096,
         messages: [{ role: "user", content: SEARCH_PROMPT }],
         tools: [{ type: "web_search_20250305", name: "web_search" }],
       },
       { beta: "web-search-2025-03-05" }
     );
 
-    const raw = data.content?.find((b) => b.type === "text")?.text || "";
+    console.log("[/api/search] stop_reason:", data.stop_reason);
+    console.log("[/api/search] content types:", data.content?.map((b) => b.type).join(", "));
+
+    const raw = data.content
+      ?.filter((b) => b.type === "text")
+      .map((b) => b.text)
+      .join("") || "";
     const parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
     res.json(parsed);
   } catch (err) {
